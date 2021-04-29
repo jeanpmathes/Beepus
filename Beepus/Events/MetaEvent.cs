@@ -10,83 +10,47 @@ namespace Beepus.Events
         {
             byte type = content[startIndex];
             startIndex++;
-            
-            if (type == 0x00) // Sequence number
+
+            return type switch
             {
-                return new SequenceNumber(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x01) // Text
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Text, out endIndex);
-            }
-            else if (type == 0x02) // Copyright
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Copyright, out endIndex);
-            }
-            else if (type == 0x03) // Sequnce/Track name
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.TrackName, out endIndex);
-            }
-            else if (type == 0x04) // Instrument name
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.InstrumentName, out endIndex);
-            }
-            else if (type == 0x05) // Lyric
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Lyric, out endIndex);
-            }
-            else if (type == 0x06) // Marker
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Marker, out endIndex);
-            }
-            else if (type == 0x07) // Cue Point
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.CuePoint, out endIndex);
-            }
-            else if (type == 0x08) // Program name
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.ProgramName, out endIndex);
-            }
-            else if (type == 0x09) // Device name
-            {
-                return new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.DeviceName, out endIndex);
-            }
-            else if (type == 0x20) // MIDI Channel Prefix
-            {
-                return new MidiChannelPrefix(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x21) // MIDI Port
-            {
-                return new MidiPort(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x2F) // End of Track
-            {
-                return new EndOfTrack(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x51) // Tempo
-            {
-                return new Tempo(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x54) // SMPTE offset
-            {
-                return new SMPTEOffset(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x58) // Time signature
-            {
-                return new TimeSignature(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x59) // Key signature
-            {
-                return new KeySignature(content, startIndex, deltaTime, out endIndex);
-            }
-            else if (type == 0x7F) // Sequencer signature
-            {
-                return new SequencerEvent(content, startIndex, deltaTime, out endIndex);
-            }
-            else
-            {
-                throw new FormatException($"The meta event type {type:X} is not supported!");
-            }
+                0x00 => // Sequence number
+                    new SequenceNumber(content, startIndex, deltaTime, out endIndex),
+                0x01 => // Text
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Text, out endIndex),
+                0x02 => // Copyright
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Copyright, out endIndex),
+                0x03 => // Sequnce/Track name
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.TrackName, out endIndex),
+                0x04 => // Instrument name
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.InstrumentName, out endIndex),
+                0x05 => // Lyric
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Lyric, out endIndex),
+                0x06 => // Marker
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Marker, out endIndex),
+                0x07 => // Cue Point
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.CuePoint, out endIndex),
+                0x08 => // Program name
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.ProgramName, out endIndex),
+                0x09 => // Device name
+                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.DeviceName, out endIndex),
+                0x20 => // MIDI Channel Prefix
+                    new MidiChannelPrefix(content, startIndex, deltaTime, out endIndex),
+                0x21 => // MIDI Port
+                    new MidiPort(content, startIndex, deltaTime, out endIndex),
+                0x2F => // End of Track
+                    new EndOfTrack(content, startIndex, deltaTime, out endIndex),
+                0x51 => // Tempo
+                    new Tempo(content, startIndex, deltaTime, out endIndex),
+                0x54 => // SMPTE offset
+                    new SMPTEOffset(content, startIndex, deltaTime, out endIndex),
+                0x58 => // Time signature
+                    new TimeSignature(content, startIndex, deltaTime, out endIndex),
+                0x59 => // Key signature
+                    new KeySignature(content, startIndex, deltaTime, out endIndex),
+                0x7F => // Sequencer signature
+                    new SequencerEvent(content, startIndex, deltaTime, out endIndex),
+                _ => throw new FormatException($"The meta event type {type:X} is not supported!")
+            };
         }
     }
 
