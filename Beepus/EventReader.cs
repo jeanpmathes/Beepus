@@ -10,7 +10,7 @@ namespace Beepus
 {
     public enum EventType
     {
-        MIDI,
+        Midi,
         SysEx,
         Meta
     }
@@ -40,7 +40,7 @@ namespace Beepus
 
             if (statusByte >= 0x80 && statusByte <= 0xEF) // Check for MIDI events
             {
-                type = EventType.MIDI;
+                type = EventType.Midi;
                 Console.WriteLine("MIDI event found...");
                 Console.WriteLine($"Status byte: {statusByte:X}, deltaTime: {deltaTime}, position: {startIndex - 1}");
 

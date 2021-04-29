@@ -7,11 +7,11 @@ namespace Beepus
 {
     public class MidiFile
     {
-        public ushort FormatType { get; private set; }
+        private ushort FormatType { get; set; }
         public ushort NTracks { get; private set; }
         public TickDiv TickDiv { get; private set; }
 
-        private byte[] content;
+        private readonly byte[] content;
         private TrackChunk[] tracks;
 
         public MidiFile(string path)
@@ -60,7 +60,7 @@ namespace Beepus
             Console.WriteLine("Reading track chunks...");
             int currentPosition = 8 + (int) headerLength;
 
-            for (int i = 0; i < NTracks; i++)
+            for (var i = 0; i < NTracks; i++)
             {
                 if (ByteTools.CompareContent(content, currentPosition, 0x4D, 0x54, 0x72, 0x6B)) // Check for "MTrk" identifier
                 {
@@ -76,14 +76,14 @@ namespace Beepus
             }
 
             // Setting the tempo (Only works for metrical timing and format 1)
-            TickDiv.microsecondsPerQuarterNote = (tracks[0].metaEvents.Find(e => e.Type == Events.MetaEvent.Tempo) as Tempo).Tt;
+            TickDiv.MicrosecondsPerQuarterNote = ((Tempo) tracks[0].metaEvents.Find(e => e.Type == Events.MetaEvent.Tempo)).Tt;
         }
 
         public void PrintTracks(BeepCommands[] commands)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
 
-            for (int i = 1; i < tracks.Length; i++)
+            for (var i = 1; i < tracks.Length; i++)
             {
                 Console.WriteLine($"Track {i}: {tracks[i].TrackName} with a total of {commands[i].CommandCount()} commands");
             }

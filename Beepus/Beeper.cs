@@ -6,23 +6,20 @@ namespace Beepus
 {
     public static class Beeper
     {
-        private static int bpm = 120;
+        private static int _bpm = 120;
 
         public static int Bpm
         {
-            get
-            {
-                return bpm;
-            }
+            get => _bpm;
 
             set
             {
-                bpm = value;
-                wholeNoteDuration = 60000 / value * 4;
+                _bpm = value;
+                _wholeNoteDuration = 60000 / value * 4;
             }
         }
 
-        private static int wholeNoteDuration = 60000 / 120 * 4;
+        private static int _wholeNoteDuration = 60000 / 120 * 4;
 
         public static void Beep(Note note, NoteValue value, int octave = 0)
         {
@@ -32,12 +29,12 @@ namespace Beepus
             Console.Beep(frequency, duration);
         }
 
-        public static int ValueToDuration(NoteValue value)
+        private static int ValueToDuration(NoteValue value)
         {
-            return wholeNoteDuration / (int)value;
+            return _wholeNoteDuration / (int)value;
         }
 
-        public static int GetFrequency(Note note, int octave = 0)
+        private static int GetFrequency(Note note, int octave = 0)
         {
             octave += 3;
             int number = octave * 12 + (int)note + 4;
@@ -48,13 +45,13 @@ namespace Beepus
 
         public static void BeepMidi(int key, int microseonds)
         {
-            int frequency = (int)(Math.Pow(2d, (key - 69) / 12d) * 440);
+            var frequency = (int)(Math.Pow(2d, (key - 69) / 12d) * 440);
             Console.Beep(frequency, microseonds / 1000);
         }
 
         public static BeepCommands[] GetBeepCommands(MidiFile file)
         {
-            BeepCommands[] beeps = new BeepCommands[file.NTracks];
+            var beeps = new BeepCommands[file.NTracks];
 
             for (int i = 0; i < file.NTracks; i++)
             {

@@ -10,7 +10,7 @@ namespace Beepus.Events
         {
             byte type = content[startIndex];
             startIndex++;
-
+            
             if (type == 0x00) // Sequence number
             {
                 return new SequenceNumber(content, startIndex, deltaTime, out endIndex);

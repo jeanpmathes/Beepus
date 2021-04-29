@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Windows.Forms;
 
 namespace Beepus
-{   
-    class Program
+{
+    internal static class Program
     {
         [STAThread]
-        static void Main()
+        private static void Main(string[] args)
         {
-            MidiFile midiFile = new MidiFile(GetPath());
+            if (args.Length != 1) return;
+            
+            var midiFile = new MidiFile(args[0]);
 
             BeepCommands[] beeps = Beeper.GetBeepCommands(midiFile);
 
@@ -17,22 +18,16 @@ namespace Beepus
             Console.WriteLine("#########################################");
             Console.WriteLine("The following tracks are available:");
             midiFile.PrintTracks(beeps);
-            if (int.TryParse(Console.ReadLine(), out int track))
-            {
-
-            }
-            else
+            
+            if (!int.TryParse(Console.ReadLine(), out int track))
             {
                 track = 1;
             }
 
             Console.WriteLine("The following channels are available in this track:");
             beeps[track].PrintChannels();
-            if (int.TryParse(Console.ReadLine(), out int channel))
-            {
-
-            }
-            else
+            
+            if (!int.TryParse(Console.ReadLine(), out int channel))
             {
                 channel = 0;
             }
@@ -41,24 +36,6 @@ namespace Beepus
             beeps[track].Beep(channel);
 
             Console.ReadKey();
-        }
-
-        public static string GetPath()
-        {
-            string path = "";
-
-            using (OpenFileDialog dialog = new OpenFileDialog())
-            {
-                dialog.Filter = "MIDI files (*.mid)|*.mid";
-                dialog.RestoreDirectory = true;
-
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    path = dialog.FileName;
-                }
-            }
-
-            return path;
         }
     }
 }

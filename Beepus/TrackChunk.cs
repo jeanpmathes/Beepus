@@ -33,7 +33,7 @@ namespace Beepus
 
                     events.Add(newEvent);
 
-                    if (type == EventType.MIDI)
+                    if (type == EventType.Midi)
                     {
                         midiEvents.Add(newEvent as IMidiEvent);
                     }
