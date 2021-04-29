@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Beepus.Utils;
 
 namespace Beepus.Events
 {
     public static class SysExEventFactory
     {
-        public static IEvent SysExEvent(byte[] content, int startIndex, byte statusByte, int deltaTime, out int endIndex)
+        public static IEvent SysExEvent(FileStream stream, byte statusByte, int deltaTime)
         {
             if (statusByte == 0xF0) // Handle SysEx events
             {
-                return new SysExEvent(content, startIndex, deltaTime, out endIndex);
+                return new SysExEvent(stream, deltaTime);
             }
             else if (statusByte == 0xF7) // Handle escape sequences
             {
-                return new EscapeSequence(content, startIndex, deltaTime, out endIndex);
+                return new EscapeSequence(stream, deltaTime);
             }
             else
             {
@@ -28,34 +29,32 @@ namespace Beepus.Events
         public int DeltaTime { get; private set; }
         public byte[] Message { get; private set; }
 
-        public SysExEvent(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public SysExEvent(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
 
-            bool isFinished = false;
-            List<byte> bytes = new List<byte>();
+            var isFinished = false;
+            var bytes = new List<byte>();
 
             while (!isFinished)
             {
-                int length = ByteTools.ConvertVariableLenght(content, startIndex, out int offset);
-                startIndex += offset;
+                int length = ByteTools.ReadVariableLenght(stream);
 
-                for (int i = 0; i < length; i++)
+                for (var i = 0; i < length; i++)
                 {
-                    if (i == length - 1 && content[startIndex + i] == 0xF7) // Check if last byte is 0xF7
+                    var b = (byte) stream.ReadByte();
+                    
+                    if (i == length - 1 && b == 0xF7) // Check if last byte is 0xF7
                     {
                         isFinished = true;
                         break;
                     }
 
-                    bytes.Add(content[startIndex + i]);
+                    bytes.Add(b);
                 }
-
-                startIndex += length;
             }
 
             Message = bytes.ToArray();
-            endIndex = startIndex;
         }
     }
 
@@ -64,15 +63,14 @@ namespace Beepus.Events
         public int DeltaTime { get; private set; }
         public byte[] Bytes { get; private set; }
 
-        public EscapeSequence(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public EscapeSequence(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
 
-            int length = ByteTools.ConvertVariableLenght(content, startIndex, out int offset);
-            endIndex = startIndex + offset + length;
-
+            int length = ByteTools.ReadVariableLenght(stream);
+            
             Bytes = new byte[length];
-            Array.Copy(content, startIndex + offset, Bytes, 0, length);
+            stream.Read(Bytes, 0, length);
         }
     }
 }

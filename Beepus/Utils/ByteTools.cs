@@ -1,85 +1,73 @@
 ﻿using System;
+using System.IO;
 
 namespace Beepus.Utils
 {
     static class ByteTools
     {
-        public static uint ToUInt32BigEndian(byte[] value, int startIndex)
+        public static uint ReadUInt32BigEndian(FileStream stream)
         {
-            byte[] toConvert = new byte[4];
-            Array.Copy(value, startIndex, toConvert, 0, 4);
-
+            var buffer = new byte[4];
+            stream.Read(buffer, 0, 4);
+            
             if (BitConverter.IsLittleEndian)
             {
-                Array.Reverse(toConvert);
+                Array.Reverse(buffer);
             }
-
-            return BitConverter.ToUInt32(toConvert, 0);
+            
+            return BitConverter.ToUInt32(buffer, 0);
         }
 
-        public static uint ToUInt24BigEndian(byte[] value, int startIndex)
+        public static uint ReadUInt24BigEndian(FileStream stream)
         {
-            return (uint)(value[startIndex] << 16 | value[startIndex + 1] << 8 | value[startIndex + 2]);
+            var buffer = new byte[3];
+            stream.Read(buffer, 0, 3);
+            
+            return (uint)(buffer[0] << 16 | buffer[1] << 8 | buffer[2]);
         }
 
-        public static ushort ToUInt16BigEndian(byte[] value, int startIndex)
+        public static ushort ReadUInt16BigEndian(FileStream stream)
         {
-            byte[] toConvert = new byte[2];
-            Array.Copy(value, startIndex, toConvert, 0, 2);
-
+            var buffer = new byte[2];
+            stream.Read(buffer, 0, 2);
+            
             if (BitConverter.IsLittleEndian)
             {
-                Array.Reverse(toConvert);
+                Array.Reverse(buffer);
             }
 
-            return BitConverter.ToUInt16(toConvert, 0);
+            return BitConverter.ToUInt16(buffer, 0);
         }
 
-        public static bool CompareContent(byte[] content, int startingIndex, params byte[] bytesToCompare)
+        public static bool CompareContent(FileStream stream, params byte[] bytesToCompare)
         {
-            bool equal = true;
-
-            if (startingIndex + bytesToCompare.Length < content.Length) // Check if there are enough entries in contents to compare
+            var isEqual = true;
+            
+            foreach (byte b in bytesToCompare)
             {
-                for (int i = 0; i < bytesToCompare.Length; i++)
+                var current = (byte) stream.ReadByte();
+
+                if (b != current)
                 {
-                    if (content[startingIndex + i] != bytesToCompare[i])
-                    {
-                        equal = false;
-                    }
+                    isEqual = false;
                 }
             }
-            else
-            {
-                equal = false;
-            }
 
-            return equal;
+            return isEqual;
         }
 
-        public static int ConvertVariableLenght(byte[] content, int startIndex, out int length)
+        public static int ReadVariableLenght(FileStream stream)
         {
-            length = 1;
+            int b;
+            var result = 0;
 
-            for (int i = 0; i < 4; i++)
+            do
             {
-                if ((content[startIndex + i] & 0b1000_0000) == 0b1000_0000) // Check if first bit is 1
-                {
-                    length++;
-                }
-                else
-                {
-                    break;
-                }
+                b = stream.ReadByte();
+                result <<= 7;
+                result |= b & 0b0111_1111;
             }
-
-            int result = 0;
-
-            for (int i = 0; i < length; i++)
-            {
-                result = result << 7;
-                result |= content[startIndex + i] & 0b0111_1111;
-            }
+            while ((b & 0b1000_0000) == 0b1000_0000); // Check if first bit is 1
 
             return result;
         }

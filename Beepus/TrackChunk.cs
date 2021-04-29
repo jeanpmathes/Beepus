@@ -2,6 +2,7 @@
 using Beepus.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Beepus
 {
@@ -14,22 +15,22 @@ namespace Beepus
         public List<IMidiEvent> midiEvents { get; private set; } = new List<IMidiEvent>();
         public List<IMetaEvent> metaEvents { get; private set; } = new List<IMetaEvent>();
 
-        public TrackChunk(byte[] content, int startIndex)
+        public TrackChunk(FileStream stream)
         {
-            if (ByteTools.CompareContent(content, startIndex, 0x4D, 0x54, 0x72, 0x6B)) // Check for "MTrk" identifier
+            if (ByteTools.CompareContent(stream, 0x4D, 0x54, 0x72, 0x6B)) // Check for "MTrk" identifier
             {
-                TrackLenght = ByteTools.ToUInt32BigEndian(content, startIndex + 4);
+                TrackLenght = ByteTools.ReadUInt32BigEndian(stream);
 
-                int readerIndex = startIndex + 8;
-                List<IEvent> events = new List<IEvent>();
+                long startPosition = stream.Position;
+                
+                var events = new List<IEvent>();
                 byte lastStatus = 0x00;
 
-                while (readerIndex < TrackLenght + startIndex) // Reading all events
+                while (stream.Position - startPosition < TrackLenght) // Reading all events
                 {
-                    IEvent newEvent = EventReader.ReadEvent(content, readerIndex, out int endIndex, out EventType type, out byte newStatus, lastStatus);
+                    IEvent newEvent = EventReader.ReadEvent(stream, out EventType type, out byte newStatus, lastStatus);
 
                     lastStatus = newStatus;
-                    readerIndex = endIndex;
 
                     events.Add(newEvent);
 

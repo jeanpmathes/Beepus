@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Text;
 using Beepus.Utils;
 
@@ -6,49 +7,49 @@ namespace Beepus.Events
 {
     public static class MetaEventFactory
     {
-        public static IEvent MetaEvent(byte[] content, int startIndex, byte statusByte, int deltaTime, out int endIndex)
+        public static IEvent MetaEvent(FileStream stream, int deltaTime)
         {
-            byte type = content[startIndex];
-            startIndex++;
+            var type = (byte) stream.ReadByte();
+            int lenght = ByteTools.ReadVariableLenght(stream);
 
             return type switch
             {
                 0x00 => // Sequence number
-                    new SequenceNumber(content, startIndex, deltaTime, out endIndex),
+                    new SequenceNumber(stream, deltaTime),
                 0x01 => // Text
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Text, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.Text),
                 0x02 => // Copyright
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Copyright, out endIndex),
-                0x03 => // Sequnce/Track name
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.TrackName, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.Copyright),
+                0x03 => // Sequence/Track name
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.TrackName),
                 0x04 => // Instrument name
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.InstrumentName, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.InstrumentName),
                 0x05 => // Lyric
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Lyric, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.Lyric),
                 0x06 => // Marker
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.Marker, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.Marker),
                 0x07 => // Cue Point
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.CuePoint, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.CuePoint),
                 0x08 => // Program name
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.ProgramName, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.ProgramName),
                 0x09 => // Device name
-                    new TextEvent(content, startIndex, deltaTime, Events.MetaEvent.DeviceName, out endIndex),
+                    new TextEvent(stream, lenght, deltaTime, Events.MetaEvent.DeviceName),
                 0x20 => // MIDI Channel Prefix
-                    new MidiChannelPrefix(content, startIndex, deltaTime, out endIndex),
+                    new MidiChannelPrefix(stream, deltaTime),
                 0x21 => // MIDI Port
-                    new MidiPort(content, startIndex, deltaTime, out endIndex),
+                    new MidiPort(stream, deltaTime),
                 0x2F => // End of Track
-                    new EndOfTrack(content, startIndex, deltaTime, out endIndex),
+                    new EndOfTrack(deltaTime),
                 0x51 => // Tempo
-                    new Tempo(content, startIndex, deltaTime, out endIndex),
+                    new Tempo(stream, deltaTime),
                 0x54 => // SMPTE offset
-                    new SMPTEOffset(content, startIndex, deltaTime, out endIndex),
+                    new SMPTEOffset(stream, deltaTime),
                 0x58 => // Time signature
-                    new TimeSignature(content, startIndex, deltaTime, out endIndex),
+                    new TimeSignature(stream, deltaTime),
                 0x59 => // Key signature
-                    new KeySignature(content, startIndex, deltaTime, out endIndex),
+                    new KeySignature(stream, deltaTime),
                 0x7F => // Sequencer signature
-                    new SequencerEvent(content, startIndex, deltaTime, out endIndex),
+                    new SequencerEvent(stream, lenght, deltaTime),
                 _ => throw new FormatException($"The meta event type {type:X} is not supported!")
             };
         }
@@ -88,13 +89,12 @@ namespace Beepus.Events
 
         public ushort Number { get; private set; }
 
-        public SequenceNumber(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public SequenceNumber(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.SequenceNumber;
 
-            Number = ByteTools.ToUInt16BigEndian(content, ++startIndex);
-            endIndex = startIndex + 2;
+            Number = ByteTools.ReadUInt16BigEndian(stream);
         }
     }
 
@@ -105,15 +105,15 @@ namespace Beepus.Events
 
         public string Text { get; private set; }
 
-        public TextEvent(byte[] content, int startIndex, int deltaTime, MetaEvent type, out int endIndex)
+        public TextEvent(FileStream stream, int length, int deltaTime, MetaEvent type)
         {
             DeltaTime = deltaTime;
             Type = type;
 
-            int length = ByteTools.ConvertVariableLenght(content, startIndex, out int offset);
-            Text = Encoding.ASCII.GetString(content, startIndex + offset, length);
-
-            endIndex = startIndex + offset + length;
+            var buffer = new byte[length];
+            stream.Read(buffer, 0, length);
+            
+            Text = Encoding.ASCII.GetString(buffer, 0, length);
         }
     }
 
@@ -124,13 +124,12 @@ namespace Beepus.Events
 
         public byte Cc { get; private set; }
 
-        public MidiChannelPrefix(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public MidiChannelPrefix(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.MIDIChannelPrefix;
 
-            Cc = content[++startIndex];
-            endIndex = startIndex + 1;
+            Cc = (byte) stream.ReadByte();
         }
     }
 
@@ -141,13 +140,12 @@ namespace Beepus.Events
 
         public byte Pp { get; private set; }
 
-        public MidiPort(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public MidiPort(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.MIDIPort;
 
-            Pp = content[++startIndex];
-            endIndex = startIndex + 1;
+            Pp = (byte) stream.ReadByte();
         }
     }
 
@@ -156,12 +154,10 @@ namespace Beepus.Events
         public int DeltaTime { get; private set; }
         public MetaEvent Type { get; private set; }
 
-        public EndOfTrack(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public EndOfTrack(int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.EndOfTrack;
-
-            endIndex = startIndex + 1;
         }
     }
 
@@ -172,13 +168,12 @@ namespace Beepus.Events
 
         public int Tt { get; private set; }
 
-        public Tempo(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public Tempo(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.Tempo;
 
-            Tt = (int)ByteTools.ToUInt24BigEndian(content, ++startIndex);
-            endIndex = startIndex + 3;
+            Tt = (int)ByteTools.ReadUInt24BigEndian(stream);
         }
     }
 
@@ -193,18 +188,16 @@ namespace Beepus.Events
         public byte Frames { get; private set; }
         public byte FractionalFrames { get; private set; }
 
-        public SMPTEOffset(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public SMPTEOffset(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.TimeSignature;
 
-            Hour = content[++startIndex];
-            Minutes = content[++startIndex];
-            Seconds = content[++startIndex];
-            Frames = content[++startIndex];
-            FractionalFrames = content[++startIndex];
-
-            endIndex = startIndex + 1;
+            Hour = (byte) stream.ReadByte();
+            Minutes =(byte) stream.ReadByte();
+            Seconds = (byte) stream.ReadByte();
+            Frames = (byte) stream.ReadByte();
+            FractionalFrames = (byte) stream.ReadByte();
         }
     }
 
@@ -218,17 +211,15 @@ namespace Beepus.Events
         public byte ClockNumber { get; private set; }
         public byte QuarterNote { get; private set; }
 
-        public TimeSignature(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public TimeSignature(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.TimeSignature;
 
-            Numerator = content[++startIndex];
-            Denominator = content[++startIndex];
-            ClockNumber = content[++startIndex];
-            QuarterNote = content[++startIndex];
-
-            endIndex = startIndex + 1;
+            Numerator = (byte) stream.ReadByte();
+            Denominator = (byte) stream.ReadByte();
+            ClockNumber = (byte) stream.ReadByte();
+            QuarterNote = (byte) stream.ReadByte();
         }
     }
 
@@ -240,15 +231,13 @@ namespace Beepus.Events
         public byte Number { get; private set; }
         public byte Mi { get; private set; }
 
-        public KeySignature(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public KeySignature(FileStream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.KeySignature;
 
-            Number = content[++startIndex];
-            Mi = content[++startIndex];
-
-            endIndex = startIndex + 1;
+            Number = (byte) stream.ReadByte();
+            Mi = (byte) stream.ReadByte();
         }
     }
 
@@ -259,16 +248,13 @@ namespace Beepus.Events
 
         public byte[] Bytes { get; private set; }
 
-        public SequencerEvent(byte[] content, int startIndex, int deltaTime, out int endIndex)
+        public SequencerEvent(FileStream stream, int length, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.SequncerEvent;
 
-            int length = ByteTools.ConvertVariableLenght(content, startIndex, out int offset);
-            endIndex = startIndex + offset + length;
-
             Bytes = new byte[length];
-            Array.Copy(content, startIndex + offset, Bytes, 0, length);
+            stream.Read(Bytes, 0, length);
         }
     }
 }

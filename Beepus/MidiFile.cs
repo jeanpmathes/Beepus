@@ -10,15 +10,15 @@ namespace Beepus
         private ushort FormatType { get; set; }
         public ushort NTracks { get; private set; }
         public TickDiv TickDiv { get; private set; }
-
-        private readonly byte[] content;
+        
+        private readonly FileStream stream;
         private TrackChunk[] tracks;
 
         public MidiFile(string path)
         {
             Console.WriteLine($"Attempting to open the file at: {path}");
-
-            content = File.ReadAllBytes(path);
+            
+            stream = File.OpenRead(path);
             Initialise();
         }
 
@@ -29,12 +29,12 @@ namespace Beepus
             // Reading the header chunk
             Console.WriteLine("Reading header...");
 
-            if (!ByteTools.CompareContent(content, 0, 0x4D, 0x54, 0x68, 0x64)) // Check for "MThd" identifier
+            if (!ByteTools.CompareContent(stream, 0x4D, 0x54, 0x68, 0x64)) // Check for "MThd" identifier
             {
                 throw new FormatException("File does not begin with MThd identifier");
             }
 
-            uint headerLength = ByteTools.ToUInt32BigEndian(content, 4);
+            uint headerLength = ByteTools.ReadUInt32BigEndian(stream);
             Console.WriteLine($"Header chunk length: {headerLength}");
 
             if (headerLength != 6) // Check if the header chunk has the size 6 bytes
@@ -42,7 +42,7 @@ namespace Beepus
                 throw new FormatException("Header chunk lenght is not 6");
             }
 
-            FormatType = ByteTools.ToUInt16BigEndian(content, 8); // Set the format type (possible types are 0, 1, and 2)
+            FormatType = ByteTools.ReadUInt16BigEndian(stream); // Set the format type (possible types are 0, 1, and 2)
             Console.WriteLine($"Format type: {FormatType}");
 
             if (FormatType != 1)
@@ -50,29 +50,20 @@ namespace Beepus
                 throw new NotImplementedException("Only format type 1 is currently implemented");
             }
 
-            NTracks = ByteTools.ToUInt16BigEndian(content, 10); // Get the amount of MTrk chunks
+            NTracks = ByteTools.ReadUInt16BigEndian(stream); // Get the amount of MTrk chunks
             Console.WriteLine($"The file has {NTracks} MTrk chunks");
             tracks = new TrackChunk[NTracks];
 
-            TickDiv = new TickDiv(content[12], content[13]); // Set the tick div
+            TickDiv = new TickDiv((byte)stream.ReadByte(), (byte)stream.ReadByte()); // Set the tick div
 
             // Reading the track chunks
             Console.WriteLine("Reading track chunks...");
-            int currentPosition = 8 + (int) headerLength;
 
             for (var i = 0; i < NTracks; i++)
             {
-                if (ByteTools.CompareContent(content, currentPosition, 0x4D, 0x54, 0x72, 0x6B)) // Check for "MTrk" identifier
-                {
-                    tracks[i] = new TrackChunk(content, currentPosition);
+                tracks[i] = new TrackChunk(stream);
 
-                    Console.WriteLine($"Found a track chunk at {currentPosition} with a lenght of {tracks[i].TrackLenght}");
-                    currentPosition += (int)tracks[i].TrackLenght + 8;
-                }
-                else
-                {
-                    throw new FormatException($"MTrk idetifier not found at byte {currentPosition}");
-                }
+                Console.WriteLine($"Found a track chunk with a lenght of {tracks[i].TrackLenght}");
             }
 
             // Setting the tempo (Only works for metrical timing and format 1)
