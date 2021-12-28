@@ -5,43 +5,29 @@ namespace Beepus.Events
 {
     public static class MidiEventFactory 
     {
-        public static IEvent MidiEvent(FileStream stream, byte statusByte, int deltaTime)
+        public static IEvent MidiEvent(Stream stream, byte statusByte, int deltaTime)
         {
-            byte channel = (byte) ((statusByte & 0b0000_1111) >> 4);
-            byte eventType = (byte)(statusByte & 0b1111_0000);
+            var channel = (byte) ((statusByte & 0b0000_1111) >> 4);
+            var eventType = (byte)(statusByte & 0b1111_0000);
 
-            if (eventType == 0x80) // Note Off
+            return eventType switch
             {
-                return new Note(deltaTime, channel, Events.MidiEvent.NoteOff, stream);
-            }
-            else if (eventType == 0x90) // Note On (Or Note Off if velocity is zero)
-            {
-                return new Note(deltaTime, channel, Events.MidiEvent.NoteOn, stream);
-            }
-            else if (eventType == 0xA0) // Polyphonic pressure
-            {
-                return new PolyphonicPressure(deltaTime, channel, stream);
-            }
-            else if (eventType == 0xB0) // Controller
-            {
-                return new Controller(deltaTime, channel, stream);
-            }
-            else if (eventType == 0xC0) // Program change
-            {
-                return new ProgramChange(deltaTime, channel, stream);
-            }
-            else if (eventType == 0xD0) // Channel pressure
-            {
-                return new ChannelPressure(deltaTime, channel, stream);
-            }
-            else if (eventType == 0xE0) // Pitch bend
-            {
-                return new PitchBend(deltaTime, channel, stream);
-            }
-            else
-            {
-                throw new FormatException("Unknown MidiEvent specifier!");
-            }
+                // Note Off
+                0x80 => new Note(deltaTime, channel, Events.MidiEvent.NoteOff, stream),
+                // Note On (Or Note Off if velocity is zero)
+                0x90 => new Note(deltaTime, channel, Events.MidiEvent.NoteOn, stream),
+                // Polyphonic pressure
+                0xA0 => new PolyphonicPressure(deltaTime, channel, stream),
+                // Controller
+                0xB0 => new Controller(deltaTime, channel, stream),
+                // Program change
+                0xC0 => new ProgramChange(deltaTime, channel, stream),
+                // Channel pressure
+                0xD0 => new ChannelPressure(deltaTime, channel, stream),
+                // Pitch bend
+                0xE0 => new PitchBend(deltaTime, channel, stream),
+                _ => throw new FormatException("Unknown MidiEvent specifier!")
+            };
         }
     }
 
@@ -64,14 +50,14 @@ namespace Beepus.Events
 
     public class Note : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte Key { get; private set; }
-        public byte Velocity { get; private set; }
+        public byte Key { get; }
+        public byte Velocity { get; }
 
-        public Note(int deltaTime, byte channel, MidiEvent type, FileStream stream)
+        public Note(int deltaTime, byte channel, MidiEvent type, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;
@@ -89,14 +75,14 @@ namespace Beepus.Events
 
     public class PolyphonicPressure : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte Key { get; private set; }
-        public byte Pressure { get; private set; }
+        public byte Key { get; }
+        public byte Pressure { get; }
 
-        public PolyphonicPressure(int deltaTime, byte channel, FileStream stream)
+        public PolyphonicPressure(int deltaTime, byte channel, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;
@@ -109,14 +95,14 @@ namespace Beepus.Events
 
     public class Controller : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte ControllerNumber { get; private set; }
-        public byte Value { get; private set; }
+        public byte ControllerNumber { get; }
+        public byte Value { get; }
 
-        public Controller(int deltaTime, byte channel, FileStream stream)
+        public Controller(int deltaTime, byte channel, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;
@@ -129,13 +115,13 @@ namespace Beepus.Events
 
     public class ProgramChange : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte Program { get; private set; }
+        public byte Program { get; }
 
-        public ProgramChange(int deltaTime, byte channel, FileStream stream)
+        public ProgramChange(int deltaTime, byte channel, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;
@@ -147,32 +133,32 @@ namespace Beepus.Events
 
     public class ChannelPressure : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte pressure { get; private set; }
+        public byte Pressure { get; }
 
-        public ChannelPressure(int deltaTime, byte channel, FileStream stream)
+        public ChannelPressure(int deltaTime, byte channel, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;
             Type = MidiEvent.ChannelPressure;
 
-            pressure = (byte) stream.ReadByte();
+            Pressure = (byte) stream.ReadByte();
         }
     }
 
     public class PitchBend : IMidiEvent
     {
-        public int DeltaTime { get; private set; }
-        public byte Channel { get; private set; }
-        public MidiEvent Type { get; private set; }
+        public int DeltaTime { get; }
+        public byte Channel { get; }
+        public MidiEvent Type { get; }
 
-        public byte Lsb { get; private set; }
-        public byte Msb { get; private set; }
+        public byte Lsb { get; }
+        public byte Msb { get; }
 
-        public PitchBend(int deltaTime, byte channel, FileStream stream)
+        public PitchBend(int deltaTime, byte channel, Stream stream)
         {
             DeltaTime = deltaTime;
             Channel = channel;

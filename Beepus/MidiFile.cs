@@ -11,7 +11,7 @@ namespace Beepus
         public ushort NTracks { get; private set; }
         public TickDiv TickDiv { get; private set; }
         
-        private readonly FileStream stream;
+        private readonly Stream stream;
         private TrackChunk[] tracks;
 
         public MidiFile(string path)
@@ -34,7 +34,7 @@ namespace Beepus
                 throw new FormatException("File does not begin with MThd identifier");
             }
 
-            uint headerLength = ByteTools.ReadUInt32BigEndian(stream);
+            var headerLength = ByteTools.ReadUInt32BigEndian(stream);
             Console.WriteLine($"Header chunk length: {headerLength}");
 
             if (headerLength != 6) // Check if the header chunk has the size 6 bytes

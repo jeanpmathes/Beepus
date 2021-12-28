@@ -5,7 +5,7 @@ namespace Beepus.Utils
 {
     static class ByteTools
     {
-        public static uint ReadUInt32BigEndian(FileStream stream)
+        public static uint ReadUInt32BigEndian(Stream stream)
         {
             var buffer = new byte[4];
             stream.Read(buffer, 0, 4);
@@ -18,7 +18,7 @@ namespace Beepus.Utils
             return BitConverter.ToUInt32(buffer, 0);
         }
 
-        public static uint ReadUInt24BigEndian(FileStream stream)
+        public static uint ReadUInt24BigEndian(Stream stream)
         {
             var buffer = new byte[3];
             stream.Read(buffer, 0, 3);
@@ -26,7 +26,7 @@ namespace Beepus.Utils
             return (uint)(buffer[0] << 16 | buffer[1] << 8 | buffer[2]);
         }
 
-        public static ushort ReadUInt16BigEndian(FileStream stream)
+        public static ushort ReadUInt16BigEndian(Stream stream)
         {
             var buffer = new byte[2];
             stream.Read(buffer, 0, 2);
@@ -39,11 +39,11 @@ namespace Beepus.Utils
             return BitConverter.ToUInt16(buffer, 0);
         }
 
-        public static bool CompareContent(FileStream stream, params byte[] bytesToCompare)
+        public static bool CompareContent(Stream stream, params byte[] bytesToCompare)
         {
             var isEqual = true;
             
-            foreach (byte b in bytesToCompare)
+            foreach (var b in bytesToCompare)
             {
                 var current = (byte) stream.ReadByte();
 
@@ -56,7 +56,7 @@ namespace Beepus.Utils
             return isEqual;
         }
 
-        public static int ReadVariableLenght(FileStream stream)
+        public static int ReadVariableLenght(Stream stream)
         {
             int b;
             var result = 0;

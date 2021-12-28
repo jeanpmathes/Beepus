@@ -7,10 +7,10 @@ namespace Beepus.Events
 {
     public static class MetaEventFactory
     {
-        public static IEvent MetaEvent(FileStream stream, int deltaTime)
+        public static IEvent MetaEvent(Stream stream, int deltaTime)
         {
             var type = (byte) stream.ReadByte();
-            int lenght = ByteTools.ReadVariableLenght(stream);
+            var lenght = ByteTools.ReadVariableLenght(stream);
 
             return type switch
             {
@@ -74,7 +74,7 @@ namespace Beepus.Events
         SMPTE,
         TimeSignature,
         KeySignature,
-        SequncerEvent
+        SequencerEvent
     }
 
     public interface IMetaEvent : IEvent
@@ -89,7 +89,7 @@ namespace Beepus.Events
 
         public ushort Number { get; private set; }
 
-        public SequenceNumber(FileStream stream, int deltaTime)
+        public SequenceNumber(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.SequenceNumber;
@@ -105,7 +105,7 @@ namespace Beepus.Events
 
         public string Text { get; private set; }
 
-        public TextEvent(FileStream stream, int length, int deltaTime, MetaEvent type)
+        public TextEvent(Stream stream, int length, int deltaTime, MetaEvent type)
         {
             DeltaTime = deltaTime;
             Type = type;
@@ -124,7 +124,7 @@ namespace Beepus.Events
 
         public byte Cc { get; private set; }
 
-        public MidiChannelPrefix(FileStream stream, int deltaTime)
+        public MidiChannelPrefix(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.MIDIChannelPrefix;
@@ -140,7 +140,7 @@ namespace Beepus.Events
 
         public byte Pp { get; private set; }
 
-        public MidiPort(FileStream stream, int deltaTime)
+        public MidiPort(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.MIDIPort;
@@ -168,7 +168,7 @@ namespace Beepus.Events
 
         public int Tt { get; private set; }
 
-        public Tempo(FileStream stream, int deltaTime)
+        public Tempo(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.Tempo;
@@ -188,7 +188,7 @@ namespace Beepus.Events
         public byte Frames { get; private set; }
         public byte FractionalFrames { get; private set; }
 
-        public SMPTEOffset(FileStream stream, int deltaTime)
+        public SMPTEOffset(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.TimeSignature;
@@ -211,7 +211,7 @@ namespace Beepus.Events
         public byte ClockNumber { get; private set; }
         public byte QuarterNote { get; private set; }
 
-        public TimeSignature(FileStream stream, int deltaTime)
+        public TimeSignature(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.TimeSignature;
@@ -231,7 +231,7 @@ namespace Beepus.Events
         public byte Number { get; private set; }
         public byte Mi { get; private set; }
 
-        public KeySignature(FileStream stream, int deltaTime)
+        public KeySignature(Stream stream, int deltaTime)
         {
             DeltaTime = deltaTime;
             Type = MetaEvent.KeySignature;
@@ -248,10 +248,10 @@ namespace Beepus.Events
 
         public byte[] Bytes { get; private set; }
 
-        public SequencerEvent(FileStream stream, int length, int deltaTime)
+        public SequencerEvent(Stream stream, int length, int deltaTime)
         {
             DeltaTime = deltaTime;
-            Type = MetaEvent.SequncerEvent;
+            Type = MetaEvent.SequencerEvent;
 
             Bytes = new byte[length];
             stream.Read(Bytes, 0, length);

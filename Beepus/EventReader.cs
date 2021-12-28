@@ -18,9 +18,9 @@ namespace Beepus
 
     public static class EventReader
     {
-        public static IEvent ReadEvent(FileStream stream, out EventType type, out byte statusByte, byte lastStatus = 0x00)
+        public static IEvent ReadEvent(Stream stream, out EventType type, out byte statusByte, byte lastStatus = 0x00)
         {
-            int deltaTime = ByteTools.ReadVariableLenght(stream);
+            var deltaTime = ByteTools.ReadVariableLenght(stream);
             statusByte = (byte) stream.ReadByte();
 
             if (statusByte < 0x80) // Check for running status

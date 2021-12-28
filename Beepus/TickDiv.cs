@@ -23,10 +23,10 @@ namespace Beepus
                 data = new byte[] { topByte, lowByte };
             }
 
-            ushort tickdiv = BitConverter.ToUInt16(data, 0);
+            var tickdiv = BitConverter.ToUInt16(data, 0);
 
             // Check timing scheme
-            bool metricalTiming = ((tickdiv & 0x8000) == 0) ? true : false;
+            var metricalTiming = ((tickdiv & 0x8000) == 0) ? true : false;
             Console.WriteLine((metricalTiming) ? "This file uses metrical timing" : "This file uses timecode");
 
             // Set values...

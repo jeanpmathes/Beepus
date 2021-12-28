@@ -21,9 +21,9 @@ namespace Beepus
             }
 
             // Set the channel names
-            int[] instrumentNameIndicies = Enumerable.Range(0, metaEvents.Count).Where(i => metaEvents[i].Type == MetaEvent.InstrumentName && i != 0).ToArray();
+            var instrumentNameIndicies = Enumerable.Range(0, metaEvents.Count).Where(i => metaEvents[i].Type == MetaEvent.InstrumentName && i != 0).ToArray();
 
-            foreach (int i in instrumentNameIndicies)
+            foreach (var i in instrumentNameIndicies)
             {
                 if (metaEvents[i - 1].Type == MetaEvent.MIDIChannelPrefix)
                 {
@@ -34,9 +34,9 @@ namespace Beepus
             // Convert the midi events to commands
             var currentNotes = new NoteUnfinished[16];
 
-            foreach (IMidiEvent midiEvent in midiEvents)
+            foreach (var midiEvent in midiEvents)
             {
-                for (int i = 0; i < 16; i++)
+                for (var i = 0; i < 16; i++)
                 {
                     if (currentNotes[i] != null)
                     {
@@ -63,7 +63,7 @@ namespace Beepus
                     }
                     case MidiEvent.NoteOff:
                     {
-                        Events.Note note = midiEvent as Events.Note;
+                        var note = midiEvent as Events.Note;
 
                         if (currentNotes[note.Channel] != null && currentNotes[note.Channel].Key == note.Key) // Check if there is a note to finish
                         {
@@ -132,7 +132,7 @@ namespace Beepus
 
             public void Beep(TickDiv tickDiv)
             {
-                foreach (Command command in Commands)
+                foreach (var command in Commands)
                 {
                     command.Beep(tickDiv);
                 }

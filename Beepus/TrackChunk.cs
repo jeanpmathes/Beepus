@@ -15,20 +15,20 @@ namespace Beepus
         public List<IMidiEvent> midiEvents { get; private set; } = new List<IMidiEvent>();
         public List<IMetaEvent> metaEvents { get; private set; } = new List<IMetaEvent>();
 
-        public TrackChunk(FileStream stream)
+        public TrackChunk(Stream stream)
         {
             if (ByteTools.CompareContent(stream, 0x4D, 0x54, 0x72, 0x6B)) // Check for "MTrk" identifier
             {
                 TrackLenght = ByteTools.ReadUInt32BigEndian(stream);
 
-                long startPosition = stream.Position;
+                var startPosition = stream.Position;
                 
                 var events = new List<IEvent>();
                 byte lastStatus = 0x00;
 
                 while (stream.Position - startPosition < TrackLenght) // Reading all events
                 {
-                    IEvent newEvent = EventReader.ReadEvent(stream, out EventType type, out byte newStatus, lastStatus);
+                    var newEvent = EventReader.ReadEvent(stream, out var type, out var newStatus, lastStatus);
 
                     lastStatus = newStatus;
 
@@ -41,7 +41,7 @@ namespace Beepus
 
                     if (type == EventType.Meta)
                     {
-                        IMetaEvent metaEvent = newEvent as IMetaEvent;
+                        var metaEvent = newEvent as IMetaEvent;
 
                         if (metaEvent.Type == MetaEvent.TrackName)
                         {

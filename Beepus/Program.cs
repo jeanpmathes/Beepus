@@ -11,7 +11,7 @@ namespace Beepus
             
             var midiFile = new MidiFile(args[0]);
 
-            BeepCommands[] beeps = Beeper.GetBeepCommands(midiFile);
+            var beeps = Beeper.GetBeepCommands(midiFile);
 
             // Get user input to choose what to beep
             Console.BackgroundColor = ConsoleColor.Blue;
@@ -19,7 +19,7 @@ namespace Beepus
             Console.WriteLine("The following tracks are available:");
             midiFile.PrintTracks(beeps);
             
-            if (!int.TryParse(Console.ReadLine(), out int track))
+            if (!int.TryParse(Console.ReadLine(), out var track))
             {
                 track = 1;
             }
@@ -27,7 +27,7 @@ namespace Beepus
             Console.WriteLine("The following channels are available in this track:");
             beeps[track].PrintChannels();
             
-            if (!int.TryParse(Console.ReadLine(), out int channel))
+            if (!int.TryParse(Console.ReadLine(), out var channel))
             {
                 channel = 0;
             }

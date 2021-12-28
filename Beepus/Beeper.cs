@@ -23,8 +23,8 @@ namespace Beepus
 
         public static void Beep(Note note, NoteValue value, int octave = 0)
         {
-            int frequency = GetFrequency(note, octave);
-            int duration = ValueToDuration(value);
+            var frequency = GetFrequency(note, octave);
+            var duration = ValueToDuration(value);
 
             Console.Beep(frequency, duration);
         }
@@ -37,8 +37,8 @@ namespace Beepus
         private static int GetFrequency(Note note, int octave = 0)
         {
             octave += 3;
-            int number = octave * 12 + (int)note + 4;
-            double frequency = 440 * Math.Pow(2d, (number - 49d) / 12d);
+            var number = octave * 12 + (int)note + 4;
+            var frequency = 440 * Math.Pow(2d, (number - 49d) / 12d);
 
             return (int)frequency;
         }
@@ -53,7 +53,7 @@ namespace Beepus
         {
             var beeps = new BeepCommands[file.NTracks];
 
-            for (int i = 0; i < file.NTracks; i++)
+            for (var i = 0; i < file.NTracks; i++)
             {
                 beeps[i] = new BeepCommands(file.GetTrack(i).midiEvents, file.GetTrack(i).metaEvents, file.TickDiv);
             }
